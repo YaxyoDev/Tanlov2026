@@ -4,13 +4,13 @@ from database.db import check_admin
 
 admin_router = Router()
 
-@admin_router.callback_query(F.data.in_(["accept_yes", "accpet_no"]))
-async def accept_ariza(callback: CallbackQuery):
+@admin_router.callback_query(F.data == "accept_yes")
+async def accept_ariza_yes(callback: CallbackQuery):
     new_text = callback.message.caption + "\n✅<i>Qabul qilingan</i>" 
     await callback.message.edit_caption(caption=new_text)
     
 
-@admin_router.callback_query(F.data == "accpet_no")
-async def accept_ariza(callback: CallbackQuery):
+@admin_router.callback_query(F.data == "accept_no")
+async def accept_ariza_no(callback: CallbackQuery):
     await callback.message.delete()
     await callback.answer("Rad etildi", show_alert=True)
