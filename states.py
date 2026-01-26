@@ -8,4 +8,4 @@ class AcceptState(StatesGroup):
     address = State()
     email = State()
     phone_number = State()
-    file = State()
+    video = State()
