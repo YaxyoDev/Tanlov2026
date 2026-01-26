@@ -9,3 +9,12 @@ accept_button = InlineKeyboardMarkup(
     ]
 )
 
+preview = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text="✅Ha", callback_data="say_yes"),
+            InlineKeyboardButton(text="❌Yo'q", callback_data="say_no")
+        ]
+    ]
+)
+
