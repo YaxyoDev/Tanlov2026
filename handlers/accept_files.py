@@ -1,12 +1,12 @@
 from aiogram import F, Router
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from datetime import datetime
 
 from loader import bot
 from states import AcceptState
 from bot_buttons.reply import phone_button, start_menu_button
-from bot_buttons.inline import accept_button
+from bot_buttons.inline import accept_button, preview
 from database.db import get_admins_id
 
 accept_router = Router()
@@ -95,8 +95,10 @@ async def get_email(message: Message, state: FSMContext):
 async def get_phone(message: Message, state: FSMContext):
     if message.contact:
         await state.update_data(phone_number=message.contact.phone_number)
-    elif message.text:
+    elif message.text and message.text.startswith("+") and message.text[1:].isdigit():
         await state.update_data(phone_number=message.text)
+    else:
+        return await message.answer("❌ Telefon raqam noto‘g‘ri formatda")
     
     await message.answer(
         "8. Videorolikni yuklang 🎥"
@@ -108,10 +110,8 @@ async def get_video(message: Message, state: FSMContext):
     if not message.video:
         return await message.answer("Iltimos, faqat video yuboring")
     video_id = message.video.file_id
+    await state.update_data(video=video_id)
     data = await state.get_data()
-    data["video"] = video_id
-
-    # adminlarga yuborish (ixtiyoriy)
     text = (
         "📥 Yangi ishtirokchi:\n\n"
         f"👤 F.I.Sh: {data['full_name']}\n"
@@ -120,18 +120,44 @@ async def get_video(message: Message, state: FSMContext):
         f"🏫 Ish/O‘qish joyi: {data['study_place']}\n"
         f"🏠 Manzil: {data['address']}\n"
         f"📧 Email: {data['email']}\n"
-        f"📞 Telefon: {data['phone_number']}"
-    )
+        f"📞 Telefon: {data['phone_number']}\n\n"
+        f"Barcha ma'lumotlaringizni tasdiqlaysizmi?"
+    ) 
 
-    for admin in get_admins_id():
-        tg_id = admin[0]
-        await bot.send_photo(tg_id, data["image"], caption=text)
-        await bot.send_video(tg_id, video_id, caption="📹Foydalanuvchining video roliki", reply_markup=accept_button)
+    await message.answer_video(data['video'])
+    await message.answer_photo(data['image'], caption=text, reply_markup=preview)
 
-    await message.answer(
-        "✅ Ma'lumotlar va video rolik qabul qilindi!",
-        reply_markup=start_menu_button
-    )
-
-    await state.clear()
+@accept_router.callback_query(F.data.in_(["say_yes", "say_no"]))
+async def accept_preview(callback: CallbackQuery, state: FSMContext):
+    if callback.data == "say_no":
+        await callback.message.delete()
+        await callback.message.answer("Bekor qilindi", reply_markup=start_menu_button)
+        await state.clear()
+    elif callback.data == "say_yes":
+        data = await state.get_data()
+        video_id = data["video"]
+        
+        # adminlarga yuborish (ixtiyoriy)
+        text = (    
+            "📥 Yangi ishtirokchi:\n\n"
+            f"👤 F.I.Sh: {data['full_name']}\n"
+            f"📱 Telegram: @{callback.from_user.username}\n"
+            f"📅 Tug‘ilgan sana: {data['birth_date']}\n"
+            f"🏫 Ish/O‘qish joyi: {data['study_place']}\n"
+            f"🏠 Manzil: {data['address']}\n"
+            f"📧 Email: {data['email']}\n"
+            f"📞 Telefon: {data['phone_number']}"
+        )
+    
+        for admin in get_admins_id():
+            tg_id = admin[0]
+            await bot.send_photo(tg_id, data["image"], caption=text)
+            await bot.send_video(tg_id, video_id, caption="📹Foydalanuvchining video roliki", reply_markup=accept_button)
+    
+        await callback.message.answer(
+            "✅ Ma'lumotlar va video rolik qabul qilindi!",
+            reply_markup=start_menu_button
+        )
+    
+        await state.clear()
 
