@@ -12,5 +12,5 @@ async def accept_ariza_yes(callback: CallbackQuery):
 
 @admin_router.callback_query(F.data == "accept_no")
 async def accept_ariza_no(callback: CallbackQuery):
-    await callback.message.delete()
-    await callback.answer("Rad etildi", show_alert=True)
+    next_text = callback.message.caption + "\n<i>❌Bekor qilingan</i>"
+    await callback.message.edit_caption(caption=next_text)
