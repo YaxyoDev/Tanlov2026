@@ -95,7 +95,7 @@ async def get_email(message: Message, state: FSMContext):
 async def get_phone(message: Message, state: FSMContext):
     if message.contact:
         await state.update_data(phone_number=message.contact.phone_number)
-    elif message.text and message.text.startswith("+") and message.text[1:].isdigit():
+    elif message.text and message.text.startswith("+998") and message.text[1:].isdigit():
         await state.update_data(phone_number=message.text)
     else:
         return await message.answer("❌ Telefon raqam noto‘g‘ri formatda")
@@ -120,7 +120,7 @@ async def get_video(message: Message, state: FSMContext):
         f"🏫 Ish/O‘qish joyi: {data['study_place']}\n"
         f"🏠 Manzil: {data['address']}\n"
         f"📧 Email: {data['email']}\n"
-        f"📞 Telefon: {data['phone_number']}\n\n"
+        f"📞 Telefon: +{data['phone_number']}\n\n"
         f"Barcha ma'lumotlaringizni tasdiqlaysizmi?"
     ) 
 
@@ -146,7 +146,7 @@ async def accept_preview(callback: CallbackQuery, state: FSMContext):
             f"🏫 Ish/O‘qish joyi: {data['study_place']}\n"
             f"🏠 Manzil: {data['address']}\n"
             f"📧 Email: {data['email']}\n"
-            f"📞 Telefon: {data['phone_number']}"
+            f"📞 Telefon: +{data['phone_number']}"
         )
     
         for admin in get_admins_id():
